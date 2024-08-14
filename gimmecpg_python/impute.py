@@ -9,18 +9,20 @@ def fast_impute(lf, dist):
     """Fast imputation."""
     if dist is not None:
         lf = lf.filter((pl.col("f_dist") <= dist) & (pl.col("b_dist") <= dist))
-
+    
     imputed = lf.with_columns(
-        pl.col("avg").fill_null(
+        pl.col("value").fill_null(
             (pl.col("b_meth") * pl.col("f_dist") + pl.col("f_meth") * pl.col("b_dist"))
             / pl.sum_horizontal("f_dist", "b_dist")
-        ),
-        pl.col("sample").fill_null(pl.lit("imputed")),
+        )
     )
 
-    imputed = imputed.select(["chr", "start", "end", "strand", "sample", "avg"])
+    name = imputed.select(pl.col("variable").first()).collect().item()
+    imputed2 = imputed.rename({"value": name})
 
-    return imputed
+    test_sites = imputed2 .filter((pl.col("b_dist") + pl.col("f_dist")) > 0).select(["l", name])## get only imputes sites
+
+    return test_sites
 
 
 def h2oPrep(lf, dist, streaming):
