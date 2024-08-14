@@ -94,7 +94,7 @@ args = parser.parse_args()
 ##########################################################
 
 # select files
-bed_files = args.input + "/*.bed"
+bed_files = args.input + "/*.csv"   
 bed_paths = glob.glob(bed_files)
 
 if args.pattern:
@@ -111,7 +111,7 @@ if not bed_paths:
 
 print(f"Merge methylation sites on opposite strands = {args.collapse}")
 
-lf_list = [read_files(bed, args.minCov, args.collapse) for bed in bed_paths]
+lf_list = read_files(bed_paths[0], args.minCov, args.collapse)    ### IHEC
 
 
 ##########################
@@ -142,6 +142,10 @@ else:
     results = lead_prediction
 
 
+fullFrame = pl.concat(results, how="align").collect()
+fullFrame.write_csv(args.output, separator="\t")
+
+exit()
 # if args.streaming:
 #         print("Collecting fast imputation results in streaming mode")
 #         dfs = pl.collect_all(results, streaming = True)
