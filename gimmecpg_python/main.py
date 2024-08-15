@@ -25,7 +25,6 @@ parser.add_argument(
 )
 parser.add_argument("-p", "--pattern", action="store", required=False, help="Pattern to select specific files")
 parser.add_argument("-o", "--output", action="store", required=True, help="Path to output directory")
-parser.add_argument("-r", "--ref", action="store", required=True, help="Path to reference methylation file")
 parser.add_argument(
     "-c",
     "--minCov",
@@ -118,7 +117,7 @@ lf_list = read_files(bed_paths[0], args.minCov, args.collapse)    ### IHEC
 # Identify missing sites #
 ##########################
 
-missing = [missing_sites(lf, args.ref) for lf in lf_list]
+missing = [missing_sites(lf) for lf in lf_list]
 print("Identified missing sites")
 
 ################################
