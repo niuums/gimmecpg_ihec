@@ -3,9 +3,8 @@
 import polars as pl
 
 
-def missing_sites(bed, ref):
+def missing_sites(bed):
     """Compare to reference."""
-    print(f"not using {ref} option")
     missing = (
         bed.with_columns(value = pl.col("value").replace(-1.0, None))
         .with_columns(
