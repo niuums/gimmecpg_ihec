@@ -7,8 +7,6 @@ from h2o.automl import H2OAutoML
 
 def fast_impute(lf, dist):
     """Fast imputation."""
-    if dist is not None:
-        lf = lf.filter((pl.col("f_dist") <= dist) & (pl.col("b_dist") <= dist))
     
     imputed = lf.with_columns(
         pl.col("value").fill_null(
@@ -17,7 +15,11 @@ def fast_impute(lf, dist):
         )
     )
 
-    name = imputed.select(pl.col("variable").first()).collect().item()
+    name = imputed.unique(subset = "variable").select("variable").collect().item()
+
+    if dist is not None:
+        imputed = imputed.filter((pl.col("f_dist") <= dist) & (pl.col("b_dist") <= dist))
+
     imputed2 = imputed.rename({"value": name})
 
     test_sites = imputed2 .filter((pl.col("b_dist") + pl.col("f_dist")) > 0).select(["l", name])## get only imputes sites
