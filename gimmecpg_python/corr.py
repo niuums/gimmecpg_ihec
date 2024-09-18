@@ -11,31 +11,34 @@ for x in chr:
             separator=",", 
             has_header=True,
             low_memory = True
-        ).unpivot(index="l")
+        ).melt(id_vars="l")
     ).cast({"l": pl.Int32, "value": pl.Float32})
 
-    print("Scanned ChromImpute file. Scanning GIMMEcpg file now")
+    print("Scanned ChromImpute file. Scanning original file now")
 
-    gimmecpg = (
+    original = (
         pl.scan_csv(
-            f"/home/nchai/scratch/ihec/gimmecpg_imputed_meth3/gimmecpg_chr{x}.meth3.bed",
-            separator="\t", # convert to "," for actual files
+            f"/home/nchai/scratch/ihec/original/chr{x}.meth10.csv",
+            separator=",", # convert to "," for actual files
             has_header=True,
             low_memory = True
-        ).unpivot(index="l")
+        ).melt(id_vars="l")
     ).cast({"l": pl.Int32, "value": pl.Float32})
+
 
     print("Both files scanned")
 
-    gimmecpg2 = gimmecpg.drop_nulls()
-    chromimpute2 = chromimpute.drop_nulls()
+    original = original.filter(pl.col("value") != -1)
+    # chromimpute = chromimpute.filter(pl.col("value").is_null())
 
-    compare = gimmecpg2.join(chromimpute2, on = ["l", "variable"], how = "inner", suffix = "_chromimpute")
+    # print(chromimpute.fetch(10000))
+    # exit()
+    compare = original.join(chromimpute, on = ["l", "variable"], how = "inner", suffix = "_chromimpute")
 
     corr = compare.group_by("variable").agg(pl.corr("value", "value_chromimpute", method = "pearson"))
     
     print("Collecting and saving")
 
-    corr.collect().write_csv(f"/home/nchai/scratch/ihec/corr3/chr{x}_corr.csv")
+    corr.collect(streaming = True).write_csv(f"/home/nchai/scratch/ihec/corr_chrImp/chr{x}_corr.csv")
 
     print(f"Done for Chromosome {x}")
